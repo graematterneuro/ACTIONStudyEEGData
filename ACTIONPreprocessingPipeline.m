@@ -201,22 +201,6 @@ for row = 1:NoRows
     % Plot continuous data for comparison with next step
     % pop_eegplot(EEG, 1, 1, 1);
 
-    %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
-    EEG = fullRankAveRef(EEG);
-
-    % Save as new dataset
-    SetName = append(CurrPID, '.Ref.set');
-    SaveNew = append(WriteDir, CurrPID, '.Ref.set');
-    [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-             'setname', SetName, ...
-             'savenew', SaveNew, ...
-             'gui','off');
-
-    eeglab redraw;
-
-    % Plot continuous data for comparison with previous step
-    % pop_eegplot(EEG, 1, 1, 1);
-
     %%%%%  LINE NOISE  %%%%%
     figure; pop_spectopo(EEG, 1, ...
         [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
@@ -308,6 +292,22 @@ for row = 1:NoRows
         eeglab redraw;
         else
     end
+
+    %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
+    EEG = fullRankAveRef(EEG);
+
+    % Save as new dataset
+    SetName = append(CurrPID, '.Ref.set');
+    SaveNew = append(WriteDir, CurrPID, '.Ref.set');
+    [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+             'setname', SetName, ...
+             'savenew', SaveNew, ...
+             'gui','off');
+
+    eeglab redraw;
+
+    % Plot continuous data for comparison with previous step
+    % pop_eegplot(EEG, 1, 1, 1);
 
     %%%%%  BAD DATA SEGMENT REMOVAL  %%%%%
     % EEG = pop_clean_rawdata(EEG, ...
