@@ -166,35 +166,17 @@ for row = 1:NoRows
 
     if userInput == 1
          % Remove bad channels and save as new dataset
-         % EEG = pop_cleanline(EEG, ...
-         %    'bandwidth',2, ...      % Bandwidth
-         %    'chanlist', [1 26], ... % Indices to clean (channel/components)
-         %    'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
-         %    'linefreqs',50, ...     % Line noise freqs to remove
-         %    'newversion',1, ...     % Use new implementation (T/F)
-         %    'normSpectrum',0, ...   % Normalise log spectrum by detrending (T/F)
-         %    'p',0.01, ...           % P-val for detection of sinusoid
-         %    'pad',2, ...            % FFT padding factor
-         %    'plotfigures',0, ...    % Plot individual figures (T/F)
-         %    'scanforlines',0, ...   % Scan for line noise (T/F)
-         %    'sigtype', ...
-         %    'Channels', ...         % Type of signal to clean (channels/components)
-         %    'taperbandwidth',2, ... % Taper bandwidth
-         %    'tau',100, ...          % Window overlap smoothing factor
-         %    'verb',0, ...           % Produce verbose output
-         %    'winsize',4, ...        % Sliding window length (s)
-         %    'winstep',1 ...         % Sliding window step size (s)
-         %    );
-    
-         % Save as new dataset
-         SetName = append(CurrPID, '.BadChanRej.set');
-         SaveNew = append(WriteDir, CurrPID, '.BadChanRej.set');
+         BadChan = input("Using numeric notation, list the channels which require interpolation in square brackets:");
+         EEG = pop_interp(EEG, BadChan, 'sphericalKang');
+        
+         SetName = append(CurrPID, '.ChanInterp.set');
+         SaveNew = append(WriteDir, CurrPID, '.ChanInterp.set');
          [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
              'setname', SetName, ...
              'savenew', SaveNew, ...
-             'gui','off'); 
+             'gui','off');
 
-         eeglab redraw;
+			 eeglab redraw;
     else
     end
 
