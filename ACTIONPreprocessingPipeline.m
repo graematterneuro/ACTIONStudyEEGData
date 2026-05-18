@@ -16,16 +16,18 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%                        OPEN EEGLAB                              %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-% OPEN EEGLAB
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab;
 
 % Start parallel pool
 parpool;
 
 % Create a table of Participant IDs from a prepared .csv  
-PIDs = readtable('C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ParticipantIDsTest.csv');
+PIDs = readtable(['C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ParticipantIDsTest' ...
+    '.csv']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%                            VARIABLES                            %%%%%
@@ -38,6 +40,7 @@ NoRows = height(PIDs);
 %%%%%                BEGIN PREPROCESSING FOR LOOP                     %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for row = 1:NoRows
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%  VARIABLES FOR PIPING INTO CODE  %%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,9 +141,9 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    %%%%%  HIGH-PASS FILTER  %%%%%
+    %%%%%  HIGH-PASS FILTER AT 1Hz  %%%%%
     EEG = pop_eegfiltnew(EEG, ...
-        'locutoff',1);
+        'locutoff', 1);
 
     % Save as new dataset
     SetName = append(CurrPID, '.HiPass.set');
@@ -151,7 +154,8 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    %%%%%  CHECK FOR BAD CHANNELS  %%%%%
+    %%%%%  CHECK FOR AND INTERPOLATE BAD CHANNELS  %%%%%
+    
     figure; pop_spectopo(EEG, 1, ...
         [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
         'EEG' , ...
@@ -176,20 +180,20 @@ for row = 1:NoRows
              'savenew', SaveNew, ...
              'gui','off');
 
-			 eeglab redraw;
+         eeglab redraw;
     else
     end
 
-    % Plot continuous data for comparison with next step
-    % pop_eegplot(EEG, 1, 1, 1);
+    fprintf("Press any key to proceed to cleaning line noise.")
+    pause();
 
-    %%%%%  LINE NOISE  %%%%%
+    %%%%%  CLEAN LINE NOISE USING CLEANLINE  %%%%%
     figure; pop_spectopo(EEG, 1, ...
         [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
         'EEG' , ...
         'percent', 100, ...         % Percent data to sample (1 to 100)
-        'freq', [6 10 22 60], ...   % Frequencies to plot as scalp maps (Hz)
-        'freqrange',[2 70], ...     % Plotting frequency range [lo_Hz hi_Hz]
+        'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
+        'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
         'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
         );
 
@@ -199,15 +203,6 @@ for row = 1:NoRows
     if userInput == 1
 
         % Plot channel spectra close up to determine line noise frequencies
-        figure; pop_spectopo(EEG, 1, ...
-            [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
-            'EEG' , ...
-            'percent', 100, ...         % Percent data to sample (1 to 100)
-            'freq', [50 65], ...   % Frequencies to plot as scalp maps (Hz)
-            'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]
-            'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
-            );
-
         userInput = input(append("Is there more than one frequency to clean?", ...
         newline, "[Y = 1/N = 0]", newline));
 
@@ -275,6 +270,27 @@ for row = 1:NoRows
         else
     end
 
+    fprintf("Press any key to continue to artifact subspace reconstruction.")
+
+    pause();
+
+    %%%%%  CLEAN BAD DATA SEGMENTS USING ASR  %%%%%
+    cleanEEG = clean_asr(EEG, 10);
+    vis_artifacts(cleanEEG, EEG);
+    EEG = cleanEEG;
+    SetName = append(CurrPID, '.ASR.set');
+    SaveNew = append(WriteDir, CurrPID, '.ASR.set');
+    [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+             'setname', SetName, ...
+             'savenew', SaveNew, ...
+             'gui','off');
+
+    eeglab redraw;
+
+    fprintf("Press any key to continue to full rank average referencing.")
+
+    pause();
+
     %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
     EEG = fullRankAveRef(EEG);
 
@@ -288,46 +304,76 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    % Plot continuous data for comparison with previous step
-    % pop_eegplot(EEG, 1, 1, 1);
+    fprintf("Press any key to continue to ICA decomposition and IC labelling.")
 
-    %%%%%  BAD DATA SEGMENT REMOVAL  %%%%%
-    % EEG = pop_clean_rawdata(EEG, ...
-    %    'FlatlineCriterion', 'off', ...
-    %    'ChannelCriterion', 'off', ...
-    %    'LineNoiseCriterion', 'off', ...
-    %    'Highpass', 'off', ...
-    %    'BurstCriterion', 'off', ...
-    %    'WindowCriterion', 0.25, ...
-    %    'BurstRejection', 'off', ...
-    %    'Distance', 'Euclidian', ...
-    %    'WindowCriterionTolerances',[-Inf 7] ...
-    %    );
-    % 
-    % % Save as new dataset
-    % SetName = append(CurrPID, '.ArtRej.set');
-    % SaveNew = append(WriteDir, CurrPID, '.ArtRej.set');
-    % [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-    %          'setname', SetName, ...
-    %          'savenew', SaveNew, ...
-    %          'gui','off'); 
-    % 
-    % eeglab redraw;
-    
-    %%%%  ICA DECOMPOSITION  %%%%%
+    pause();
+
+    %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
     EEG = pop_runica(EEG, ...
        'icatype', 'runica', ...
        'extended', 1, ...
        'lrate', 1e-05, ...
        'maxsteps', 2000, ...
        'interrupt','off');
+
+    EEG = pop_iclabel(EEG, 'default');
     
-    EEG = pop_saveset(EEG, ...
-        'filename', SetName, ...
-        'filepath', WriteDir);
-    [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
+    SetName = append(CurrPID, '.ICALabelled.set');
+    SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
+    [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+             'setname', SetName, ...
+             'savenew', SaveNew, ...
+             'gui','off');
 
     eeglab redraw;
+
+    fprintf("Press any key to label independent components.")
+
+    pause();
+
+    %%%%%  IC REJECTION  %%%%%%
+    fprintf("Select ICs for rejection then press any key to continue.");
+    
+    pop_viewprops(EEG, 0);
+    pop_selectcomps(EEG, [1:26]);
+
+    pause();
+
+    % Plot single trials before and after IC rejection.
+	% Code on lines 345 to 356 (inclusive) merged from pop_subcomp.m 
+	% (https://github.com/sccn/eeglab/blob/develop/functions/popfunc/pop_subcomp.m)
+    components = [];
+    components = find(EEG.reject.gcompreject == 1);
+    components = components(:)';
+    component_keep = setdiff_bc(1:size(EEG.icaweights,1), components);
+    compproj = EEG.icawinv(:, component_keep)*eeg_getdatact(EEG, 'component', component_keep, 'reshape', '2d');
+    compproj = reshape(compproj, size(compproj,1), EEG.pnts, EEG.trials);
+
+    eegplot(EEG.data(EEG.icachansind,:,:), ...
+        'srate', EEG.srate, ...
+        'title', 'Black = channel before rejection; red = after rejection -- eegplot()', ...
+        'limits', [EEG.xmin EEG.xmax]*1000, ...
+        'data2', compproj); 
+
+    fprintf("Press any key to remove the rejected components.")
+
+    pause();
+
+    EEG = pop_subcomp( EEG, [], 0);
+
+    SetName = append(CurrPID, '.ICACleaned.set');
+    SaveNew = append(WriteDir, CurrPID, '.ICACleaned.set');
+    [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+             'setname', SetName, ...
+             'savenew', SaveNew, ...
+             'gui','off');
+
+    eeglab redraw;
+
+    fprintf("Press any key to clear all and load next participant.")
+
+    pause();
+
 
    STUDY = []; 
    CURRENTSTUDY = 0; 
