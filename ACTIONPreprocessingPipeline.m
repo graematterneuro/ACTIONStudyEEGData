@@ -26,7 +26,7 @@
 parpool;
 
 % Create a table of Participant IDs from a prepared .csv  
-PIDs = readtable(['C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ParticipantIDsTest' ...
+PIDs = readtable(['C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ParticipantIDs' ...
     '.csv']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
