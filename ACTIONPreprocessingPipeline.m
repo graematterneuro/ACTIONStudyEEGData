@@ -184,7 +184,7 @@ for row = 1:NoRows
     else
     end
 
-    fprintf("Press any key to proceed to cleaning line noise.")
+    fprintf("Press any key to proceed to cleaning line noise.");
     pause();
 
     %%%%%  CLEAN LINE NOISE USING CLEANLINE  %%%%%
@@ -270,7 +270,7 @@ for row = 1:NoRows
         else
     end
 
-    fprintf("Press any key to continue to artifact subspace reconstruction.")
+    fprintf("Press any key to continue to artifact subspace reconstruction.");
 
     pause();
 
@@ -287,7 +287,7 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    fprintf("Press any key to continue to full rank average referencing.")
+    fprintf("Press any key to continue to full rank average referencing.");
 
     pause();
 
@@ -304,7 +304,7 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    fprintf("Press any key to continue to ICA decomposition and IC labelling.")
+    fprintf("Press any key to continue to ICA decomposition and IC labelling.");
 
     pause();
 
@@ -327,13 +327,13 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    fprintf("Press any key to label independent components.")
+    fprintf("Press any key to label independent components.");
 
     pause();
 
     %%%%%  IC REJECTION  %%%%%%
     fprintf("Select ICs for rejection then press any key to continue.");
-    
+    addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab_current\eeglab2026.0.0\plugins\ICLabel\viewprops');
     pop_viewprops(EEG, 0);
     pop_selectcomps(EEG, [1:26]);
 
@@ -355,7 +355,7 @@ for row = 1:NoRows
         'limits', [EEG.xmin EEG.xmax]*1000, ...
         'data2', compproj); 
 
-    fprintf("Press any key to remove the rejected components.")
+    fprintf("Press any key to remove the rejected components.");
 
     pause();
 
@@ -370,7 +370,7 @@ for row = 1:NoRows
 
     eeglab redraw;
 
-    fprintf("Press any key to clear all and load next participant.")
+    fprintf("Press any key to clear all and load next participant.");
 
     pause();
 
