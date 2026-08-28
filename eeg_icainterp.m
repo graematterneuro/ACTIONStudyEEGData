@@ -1,8 +1,5 @@
 % function EEGout = eeg_icainterp(EEG,urchanlocs)
 %
-% Author: Jason Palmer, West Virginia University, 2026
-% https://sccn.ucsd.edu/pipermail/eeglablist/2026/019041.html
-%
 % Interpolate missing channels of EEG.icawinv (ICA maps) and EEG data
 %
 % Inputs:
@@ -15,6 +12,8 @@
 %     EEGout        -    dataset with ICA maps and data with rejected /
 %                        missing channels interpolated
 %
+% Author: Jason Palmer, West Virginia University, 2026
+% https://sccn.ucsd.edu/pipermail/eeglablist/2026/019041.html
 
 function EEGout = eeg_icainterp(EEG,urchanlocs)
 
