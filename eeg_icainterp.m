@@ -14,6 +14,8 @@
 %
 % Author: Jason Palmer, West Virginia University, 2026
 % https://sccn.ucsd.edu/pipermail/eeglablist/2026/019041.html
+%
+% Edited by Grace Harvie to apply the Spherical Kang method
 
 function EEGout = eeg_icainterp(EEG,urchanlocs)
 
@@ -27,7 +29,7 @@ EEGtmp = EEG;
 EEGtmp.data = EEGtmp.icawinv;
 EEGtmp.trials = 1;
 EEGtmp.pnts = size(EEGtmp.icawinv,2);
-EEGtmp2 = eeg_interp(EEGtmp,urchanlocs);
+EEGtmp2 = eeg_interp(EEGtmp,urchanlocs,sphericalKang); % GH edit here
 
 % copy the icaact and interpolated icawinv into output
 EEGout = EEG;
