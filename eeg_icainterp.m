@@ -1,11 +1,12 @@
-% function EEGout = eeg_icainterp(EEG,urchanlocs)
+% function EEGout = eeg_icainterp(EEG,rejchan,fullchanlocs)
 %
 % Interpolate missing channels of EEG.icawinv (ICA maps) and EEG data
 %
 % Inputs:
 %
 %     EEG         -     a dataset with ICA from data with rejected / missing channels
-%     urchanlocs  -     complete channel structure which will be used to
+%     rejchan     -     the channel/s which has/have beem rejected
+%     fullchanlocs  -     complete channel structure which will be used to
 %                       interpolate missing data
 %
 % Outputs:
@@ -19,17 +20,19 @@
 % Edited by Grace Harvie to work with the ACTION EEG preprocessing pipeline
 % and use the Spherical Kang method, Sept 2026
 
-function EEGout = eeg_icainterp(EEG,urchanlocs)
+function EEGout = eeg_icainterp(EEG,rejchan,fullchanlocs)
 
 % get the original channel numbers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% NOTE: I couldn't get this to work, I think because my dataset has data 
-%%%       labels. Instead I created a full channel list and copy of the 
-%%%       complete data structure in my preprocessing pipeline.       - GH
+%%%       labels. Instead I created a copy of the complete data structure 
+%%%       in my preprocessing pipeline and get the chanlist from that - GH
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for k = 1:EEG.nbchan
-%     v(k) = EEG.chanlocs(k).urchan;
+%     v(k) = EEG.urchanlocs(k).urchan;
 % end
+
+fullChanList = 1:size(fullchanlocs,2);
 
 % create fake dataset to interpolate ica maps
 EEGtmp = EEG;
@@ -37,7 +40,7 @@ EEGtmp.data = EEG.icawinv;
 EEGtmp.icaact = [];
 EEGtmp.trials = 1;
 EEGtmp.pnts = size(EEG.icawinv,2);[]
-EEGtmp2 = eeg_interp(EEGtmp,full.chanlocs,'sphericalKang'); % GH edit here
+EEGtmp2 = eeg_interp(EEGtmp,fullchanlocs,'sphericalKang'); % GH edit here
 
 % copy the icaact and interpolated icawinv into output
 EEGout = EEG;
@@ -59,7 +62,7 @@ EEGout.icasphere(:,add:EEGout.nbchan) = 0;
 EEG.icasphere(:,add:EEGout.nbchan) = 0;
 readCount = 1;
 for writeCount = 1:EEGout.nbchan
-    if ismember(writeCount,BadChan) == 1
+    if ismember(writeCount,rejchan) == 1
         readCount = readCount-1;
     else
         EEGout.icasphere(:,writeCount) = EEG.icasphere(:,readCount);
@@ -67,13 +70,13 @@ for writeCount = 1:EEGout.nbchan
     readCount = readCount+1;
 end
 
-for zeroCount = 1:length(BadChan)
-    EEGout.icasphere(:,BadChan(zeroCount)) = 0;
+for zeroCount = 1:length(rejchan)
+    EEGout.icasphere(:,rejchan(zeroCount)) = 0;
 end
 
 % add data with interpolated channels
 EEGout.data = reshape(EEGout.icawinv * double(EEGout.icaact(:,:)),EEGout.nbchan,EEGout.pnts,EEGout.trials);
 
 % copy full chanlocs and icachansind
-EEGout.chanlocs = full.chanlocs;
+EEGout.chanlocs = fullchanlocs;
 EEGout.icachansind = 1:EEGout.nbchan;
