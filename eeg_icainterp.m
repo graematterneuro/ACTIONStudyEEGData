@@ -5,7 +5,8 @@
 % Inputs:
 %
 %     EEG         -     a dataset with ICA from data with rejected / missing channels
-%     urchanlocs  -     array of channel locations with missing channels
+%     urchanlocs  -     complete channel structure which will be used to
+%                       interpolate missing data
 %
 % Outputs:
 %
@@ -15,35 +16,64 @@
 % Author: Jason Palmer, West Virginia University, 2026
 % https://sccn.ucsd.edu/pipermail/eeglablist/2026/019041.html
 %
-% Edited by Grace Harvie to apply the Spherical Kang method
+% Edited by Grace Harvie to work with the ACTION EEG preprocessing pipeline
+% and use the Spherical Kang method, Sept 2026
 
 function EEGout = eeg_icainterp(EEG,urchanlocs)
 
 % get the original channel numbers
-for k = 1:EEG.nbchan
-    v(k) = EEG.chanlocs(k).urchan;
-end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% NOTE: I couldn't get this to work, I think because my dataset has data 
+%%%       labels. Instead I created a full channel list and copy of the 
+%%%       complete data structure in my preprocessing pipeline.       - GH
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% for k = 1:EEG.nbchan
+%     v(k) = EEG.chanlocs(k).urchan;
+% end
 
 % create fake dataset to interpolate ica maps
 EEGtmp = EEG;
-EEGtmp.data = EEGtmp.icawinv;
+EEGtmp.data = EEG.icawinv;
+EEGtmp.icaact = [];
 EEGtmp.trials = 1;
-EEGtmp.pnts = size(EEGtmp.icawinv,2);
-EEGtmp2 = eeg_interp(EEGtmp,urchanlocs,sphericalKang); % GH edit here
+EEGtmp.pnts = size(EEG.icawinv,2);[]
+EEGtmp2 = eeg_interp(EEGtmp,full.chanlocs,'sphericalKang'); % GH edit here
 
 % copy the icaact and interpolated icawinv into output
 EEGout = EEG;
-EEGout.nbchan = length(urchanlocs);
+EEGout.nbchan = length(fullChanList);
 EEGout.icawinv = EEGtmp2.data;
 EEGout.icaact = EEG.icaact;
 
 % add zero columns to icasphere where (new) interpolated data channels are
-EEGout.icasphere(:,v) = EEG.icasphere;
-EEGout.icasphere(:,setdiff(1:EEGout.nbchan,v)) = 0;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% NOTE: This wouldn't work for me either, so I wrote a new method to a
+%%%       zero-filled columns to icasphere                            - GH
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EEGout.icasphere(:,fullChanList) = EEG.icasphere;
+% EEGout.icasphere(:,setdiff(1:EEGout.nbchan,fullChanList)) = 0;
+
+% New method to add zero columns to icasphere where (new) interpolated data channels are
+add = length(EEG.icasphere)+1;
+EEGout.icasphere(:,add:EEGout.nbchan) = 0;
+EEG.icasphere(:,add:EEGout.nbchan) = 0;
+readCount = 1;
+for writeCount = 1:EEGout.nbchan
+    if ismember(writeCount,BadChan) == 1
+        readCount = readCount-1;
+    else
+        EEGout.icasphere(:,writeCount) = EEG.icasphere(:,readCount);
+    end
+    readCount = readCount+1;
+end
+
+for zeroCount = 1:length(BadChan)
+    EEGout.icasphere(:,BadChan(zeroCount)) = 0;
+end
 
 % add data with interpolated channels
 EEGout.data = reshape(EEGout.icawinv * double(EEGout.icaact(:,:)),EEGout.nbchan,EEGout.pnts,EEGout.trials);
 
 % copy full chanlocs and icachansind
-EEGout.chanlocs = urchanlocs;
+EEGout.chanlocs = full.chanlocs;
 EEGout.icachansind = 1:EEGout.nbchan;
