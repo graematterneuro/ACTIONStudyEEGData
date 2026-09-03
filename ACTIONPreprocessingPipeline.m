@@ -480,10 +480,6 @@ for row = 1:NoRows
 
             attempt = num2str(passCounter);
 
-            mkdir(append(['C:\\Users\\Grae\\OneDrive - Westmead Institute ' ...
-                'for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\' ...
-                'Preprocessing\\'], CurrPID, '\\Attempt', attempt));
-
         end
 
     end
