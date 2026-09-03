@@ -355,7 +355,6 @@ for row = 1:NoRows
             pause();
 
             addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\EEGLAB_MyFiles\GitHubRepo');
-
             EEG = eeg_icainterp(EEG, BadChan, chanlocs);
 
             SetName = append(CurrPID, '.ICAInterp.set');
@@ -443,7 +442,7 @@ for row = 1:NoRows
             % Write directory file path
             WriteDir = append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
                 'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\', ...
-                'Preprocessing\\ExportedEEGs');
+                'Preprocessing\\ExportedEEGs\\');
 
             fileName = append(WriteDir, CurrPID, '.Cleaned.txt');
             pop_export(EEG, fileName, ...
@@ -481,7 +480,9 @@ for row = 1:NoRows
 
             attempt = num2str(passCounter);
 
-            mkdir(append('C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\', CurrPID, '\\Attempt'));
+            mkdir(append(['C:\\Users\\Grae\\OneDrive - Westmead Institute ' ...
+                'for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\' ...
+                'Preprocessing\\'], CurrPID, '\\Attempt', attempt));
 
         end
 
