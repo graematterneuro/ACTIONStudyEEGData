@@ -46,6 +46,9 @@ for row = 1:NoRows
         parpool;
     end
 
+    % Counters for the while loop and various if-else statements which
+    % allow us to iterate through the processing multiple times if there
+    % are still noisy channels after ICA.
     passCounter = 1;
     attempt = num2str(passCounter);
     repeatWReject = 1;
@@ -261,6 +264,8 @@ for row = 1:NoRows
         cleanEEG = clean_asr(EEG, 10);
         vis_artifacts(cleanEEG, EEG);
         EEG = cleanEEG;
+
+        % Save as new dataset
         SetName = append(CurrPID, '.ASR.set');
         SaveNew = append(WriteDir, CurrPID, '.ASR.set');
         [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
@@ -296,6 +301,7 @@ for row = 1:NoRows
 
             EEG = pop_select(EEG, 'rmchannel', BadChan);
 
+            % Save as new dataset
             SetName = append(CurrPID, '.ChanRej.set');
             SaveNew = append(WriteDir, CurrPID, '.ChanRej.set');
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
@@ -338,6 +344,7 @@ for row = 1:NoRows
 
         EEG = pop_iclabel(EEG, 'default');
 
+        % Save as new dataset
         SetName = append(CurrPID, '.ICALabelled.set');
         SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
         [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
@@ -354,9 +361,12 @@ for row = 1:NoRows
 
             pause();
 
+            % add path of icainterp() to ensure MATLAB doesn't throw an
+            % error, since this function is not in our main eeglab folder
             addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\EEGLAB_MyFiles\GitHubRepo');
             EEG = eeg_icainterp(EEG, BadChan, chanlocs);
 
+            % Save as new dataset
             SetName = append(CurrPID, '.ICAInterp.set');
             SaveNew = append(WriteDir, CurrPID, '.ICAInterp.set');
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
@@ -402,6 +412,7 @@ for row = 1:NoRows
 
         EEG = pop_subcomp( EEG, [], 0);
 
+        % Save as new dataset
         SetName = append(CurrPID, '.ICACleaned.set');
         SaveNew = append(WriteDir, CurrPID, '.ICACleaned.set');
         [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
@@ -432,6 +443,8 @@ for row = 1:NoRows
                 'savenew', SaveNew);
 
             eeglab redraw;
+
+            pop_eegplot( EEG, 1, 1, 1);
 
             fprintf("Press any key to export cleaned data to text.");
 
