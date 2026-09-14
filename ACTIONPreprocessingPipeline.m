@@ -39,13 +39,6 @@ NoRows = height(PIDs);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for row = 1:NoRows
 
-    % Check if there is currently a parallel pool, if one does not exist,
-    % create one
-    pool = gcp("nocreate");
-    if isempty(pool)
-        parpool;
-    end
-
     % Counters for the while loop and various if-else statements which
     % allow us to iterate through the processing multiple times if there
     % are still noisy channels after ICA.
@@ -53,7 +46,14 @@ for row = 1:NoRows
     attempt = num2str(passCounter);
     repeatWReject = 1;
 
-    while repeatWReject == 1;
+    while repeatWReject == 1
+
+        % Check if there is currently a parallel pool, if one does not exist,
+        % create one
+        pool = gcp("nocreate");
+        if isempty(pool)
+            parpool;
+        end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%  VARIABLES FOR PIPING INTO CODE  %%%%%
@@ -384,7 +384,7 @@ for row = 1:NoRows
 
         %%%%%  IC REJECTION  %%%%%%
         fprintf("Select ICs for rejection then press any key to continue.");
-        addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab_current\eeglab2026.0.0\plugins\ICLabel\viewprops');
+        addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab2026.1.0\plugins\ICLabel\viewprops\');
         pop_viewprops(EEG, 0);
         pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
