@@ -444,23 +444,15 @@ for row = 1:NoRows
 
             eeglab redraw;
 
-            pop_eegplot( EEG, 1, 1, 1);
+            pop_eegplot(EEG, 1, 1, 1);
 
-            fprintf("Press any key to export cleaned data to text.");
+            fprintf("Mark epochs with artifacts and then press any key to export cleaned data to text.");
 
             pause();
 
 
-            %%%%% EXPORT AS TEXT FILE %%%%%
-            % Write directory file path
-            WriteDir = append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
-                'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\', ...
-                'Preprocessing\\ExportedEEGs\\');
-
-            fileName = append(WriteDir, CurrPID, '.Cleaned.txt');
-            pop_export(EEG, fileName, ...
-                'transpose', 'on', ...
-                'precision', 4);
+            %%%%% EXPORT AS TEXT FILE %%%%%    
+            epoch_export(EEG, CurrPID);
 
             fprintf("Press any key to clear all and load next participant.");
 
@@ -476,7 +468,7 @@ for row = 1:NoRows
 
             repeatWReject = 0;
 
-        elseif repeatWReject == 1;
+        elseif repeatWReject == 1
             fprintf("Press any key to clear all and try again.");
 
             pause();
