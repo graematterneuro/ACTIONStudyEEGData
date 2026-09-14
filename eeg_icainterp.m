@@ -39,7 +39,7 @@ EEGtmp = EEG;
 EEGtmp.data = EEG.icawinv;
 EEGtmp.icaact = [];
 EEGtmp.trials = 1;
-EEGtmp.pnts = size(EEG.icawinv,2);[]
+EEGtmp.pnts = size(EEG.icawinv,2);
 EEGtmp2 = eeg_interp(EEGtmp,fullchanlocs,'sphericalKang'); % GH edit here
 
 % copy the icaact and interpolated icawinv into output
