@@ -87,7 +87,7 @@ for row = 1:NoRows
             eeglab redraw;
 
             % Check that the file imported correctly
-            chanStructChk  = input(append("Is the EEG file missing channel labels?", ...
+            chanStructChk  = input(append("Is the EEG file missing channel structure (ie, no '(labels only)' in the EEGLAB GUI))?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
             if chanStructChk == 1
