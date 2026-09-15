@@ -29,12 +29,7 @@ for i = 1:size(EEG.reject.rejmanual, 2)
         filename = append(writeDir, 'Epoch', epoch, '//', CurrPID, '.Epoch', epoch, '.txt');
         pop_export(temp, filename,'transpose','on','precision',4);
     end
-end
-
-
-mkdir(append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
-            'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\', ...
-            'Preprocessing\\ExportedEEGs\\', CurrPID, '\\'));
+end 
 
 writeDir = append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
             'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\', ...
