@@ -146,6 +146,7 @@ for row = 1:NoRows
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%%%%  SELECT THE CEPHALIC CHANNELS  %%%%%
+            fprintf(append(newline, newline, "SELECTING CEPHALIC CHANNELS", newline, newline))
             EEG = pop_select(EEG, ...
                 'channel',{'Fp1','Fp2','F7','F3','Fz','F4','F8','FC3','FCz','FC4', ...
                 'T3','C3','Cz','C4','T4','CP3','CPz','CP4','T5','P3','Pz','P4', ...
@@ -161,6 +162,7 @@ for row = 1:NoRows
 
 
             %%%%%  HIGH-PASS FILTER AT 1Hz  %%%%%
+            fprintf(append(newline, newline, "APPLYING HIGH PASS FILTER", newline, newline))
             EEG = pop_eegfiltnew(EEG, ...
                 'locutoff', 1);
 
@@ -254,7 +256,7 @@ for row = 1:NoRows
                 eeglab redraw;
             end
 
-            fprintf("Press any key to continue to ASR.");
+            fprintf(append(newline, "Press any key to continue to ASR.", newline, newline));
             pause();
 
             %%%%%  CLEAN BAD DATA SEGMENTS USING ASR  %%%%%
@@ -271,7 +273,7 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf("Press any key to continue to full rank average referencing.");
+            fprintf(append(newline, newline, "Press any key to continue to full rank average referencing.", newline, newline));
             pause();
 
             %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
@@ -286,7 +288,7 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf("Press any key to continue to ICA decomposition and IC labelling.");
+            fprintf(append(newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
@@ -308,11 +310,15 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
+            fprintf(append(newline, newline, "Press any key to continue to view ICs.", newline, newline));
+            pause();
+
             %%%%%  IC REJECTION  %%%%%%
-            fprintf("Select ICs for rejection then press any key to continue.");
             addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab2026.1.0\plugins\ICLabel\viewprops\');
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
+
+            fprintf(append(newline, newline, "Select ICs for rejection then press any key to continue.", newline, newline));
             pause();
 
             % Plot single trials before and after IC rejection.
@@ -331,7 +337,7 @@ for row = 1:NoRows
                 'limits', [EEG.xmin EEG.xmax]*1000, ...
                 'data2', compproj);
 
-            fprintf("Press any key to remove the rejected components.");
+            fprintf(append(newline, newline, "Press any key to remove the rejected components.", newline, newline));
             pause();
 
             EEG = pop_subcomp( EEG, [], 0);
@@ -360,11 +366,12 @@ for row = 1:NoRows
             repeatWReject = input(append("Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
-            fprintf("Note these channels down in your lab book.");
+            repeatWReject = input(append("Note these channels down in your lab book.", newline, "Just to confirm - there are bad channels which require rejecting?", ...
+                newline, "[Y = 1/N = anything else]", newline));
 
             if ~any(repeatWReject)
                 repeatWReject = 0;
-                fprintf("Press any key to continue to epoching.");
+                fprintf(append(newline, newline, "Press any key to continue to epoching.", newline, newline));
                 pause();
 
                 %%%%%  EPOCH DATA  %%%%%
@@ -381,14 +388,14 @@ for row = 1:NoRows
 
                 pop_eegplot(EEG, 1, 1, 1);
 
-                fprintf("Mark epochs with artifacts and then press any key to export cleaned data to text.");
+                fprintf(append(newline, newline, "Mark epochs with artifacts and then press any key to export cleaned data to text.", newline, newline));
                 pause();
 
 
                 %%%%% EXPORT AS TEXT FILE %%%%%
                 epoch_export(EEG, CurrPID);
 
-                fprintf("Press any key to clear all and load next participant.");
+                fprintf(append(newline, newline, "Press any key to clear all and load next participant.", newline, newline));
                 pause();
 
                 STUDY = [];
@@ -401,7 +408,7 @@ for row = 1:NoRows
                 repeatWReject = 0;
 
             elseif repeatWReject == 1
-                fprintf("Press any key to clear all and try again.");
+                fprintf(append(newline, newline, "Press any key to clear all and try again.", newline, newline));
                 pause();
 
                 STUDY = [];
@@ -440,7 +447,7 @@ for row = 1:NoRows
             chanlocs = EEG.chanlocs;
 
             % fprintf(append("Noisy channels noted were ", badChanRemain, newline))
-            BadChan = input("Using numeric notation in square brackets, list the channels which you'd like to interpolate:");
+            BadChan = input(append(newline, newline, "Using numeric notation in square brackets, list the channels which you'd like to interpolate:", newline));
 
             EEG = pop_select(EEG, 'rmchannel', BadChan);
 
@@ -453,7 +460,7 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf("Press any key to continue to full rank average referencing.");
+            fprintf(append(newline, newline, "Press any key to continue to full rank average referencing.", newline, newline));
             pause();
 
 
@@ -469,7 +476,7 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf("Press any key to continue to ICA decomposition and IC labelling.");
+            fprintf(append(newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
@@ -491,7 +498,7 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf(append("Press any key to interpolate independent components.", newline));
+            fprintf(append(newline, newline, "Press any key to interpolate independent components.", newline, newline));
             pause();
 
             %%%%%  ICA INTERPOLARION  %%%%%
@@ -510,15 +517,15 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf("Press any key to label independent components.");
+            fprintf(append(newline, newline, "Press any key to label independent components.", newline, newline));
             pause();
 
             %%%%%  IC REJECTION  %%%%%%
-            fprintf("Select ICs for rejection then press any key to continue.");
             addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab2026.1.0\plugins\ICLabel\viewprops\');
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
+            fprintf(append(newline, newline, "Select ICs for rejection then press any key to continue.", newline, newline));
             pause();
 
             % Plot single trials before and after IC rejection.
@@ -537,7 +544,7 @@ for row = 1:NoRows
                 'limits', [EEG.xmin EEG.xmax]*1000, ...
                 'data2', compproj);
 
-            fprintf("Press any key to remove the rejected components.");
+            fprintf(append(newline, newline,"Press any key to remove the rejected components.", newline, newline));
             pause();
 
             EEG = pop_subcomp( EEG, [], 0);
@@ -563,14 +570,15 @@ for row = 1:NoRows
                 );
             pop_eegplot(EEG, 1, 1, 1);
 
-            repeatWReject = input(append("Are there channels which are not adequately cleaned by ICA?", ...
+            repeatWReject = input(append(newline, newline, "Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
-            fprintf("Note these channels down in your lab book.");
+            repeatWReject = input(append(newline, newline, "Note these channels down in your lab book.", newline, newline, "Just to confirm - there are bad channels which require rejecting?", ...
+                newline, "[Y = 1/N = anything else]", newline));
 
             if ~any(repeatWReject)
                 repeatWReject = 0;
-                fprintf("Press any key to continue to epoching.");
+                fprintf(append(newline, newline, "Press any key to continue to epoching.", newline, newline));
                 pause();
 
                 %%%%%  EPOCH DATA  %%%%%
@@ -587,14 +595,14 @@ for row = 1:NoRows
 
                 pop_eegplot(EEG, 1, 1, 1);
 
-                fprintf("Mark epochs with artifacts and then press any key to export cleaned data to text.");
+                fprintf(append(newline, newline, "Mark epochs with artifacts and then press any key to export cleaned data to text.", newline, newline));
                 pause();
 
 
                 %%%%% EXPORT AS TEXT FILE %%%%%
                 epoch_export(EEG, CurrPID);
 
-                fprintf("Press any key to clear all and load next participant.");
+                fprintf(append(newline, newline, "Press any key to clear all and load next participant.", newline, newline));
                 pause();
 
                 STUDY = [];
@@ -607,7 +615,7 @@ for row = 1:NoRows
                 repeatWReject = 0;
 
             elseif repeatWReject == 1
-                fprintf("Press any key to clear all and try again.");
+                fprintf(append(newline, newline, "Press any key to clear all and try again.", newline, newline));
                 pause();
 
                 STUDY = [];
