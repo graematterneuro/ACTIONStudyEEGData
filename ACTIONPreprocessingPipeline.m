@@ -23,9 +23,12 @@
 
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab;
 
-% Create a table of Participant IDs from a prepared .csv
-PIDs = readtable(['C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ParticipantIDs' ...
-    '.csv']);
+% Create a variable for FilePaths.env
+filePaths = dotenv();
+
+% Create a table of Participant IDs from a prepared .csv, using file path 
+% in .env
+PIDs = readtable(filePaths.env.PIDtable);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%                            VARIABLES                            %%%%%
@@ -62,17 +65,11 @@ for row = 1:NoRows
         CurrPID = char(string(PIDs{row, 'ParticipantID'}));
 
         % Write directory file path
-        mkdir(append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
-            'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\', ...
-            CurrPID, '\\Attempt', attempt, '\\'));
-        WriteDir = append('C:\\Users\\Grae\\OneDrive - Westmead Institute ', ...
-            'for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\', ...
-            CurrPID, '\\Attempt', attempt, '\\');
+        mkdir(append(filePaths.env.MainDir, CurrPID, '\\Attempt', attempt, '\\'));
+        WriteDir = append(filePaths.env.MainDir, CurrPID, '\\Attempt', attempt, '\\');
 
         % Read directory file path
-        ReadFile = append('C:\Users\Grae\OneDrive - Westmead Institute for ', ...
-            'Medical Research\Documents\EEGLAB_MyFiles\ACTION\', CurrPID, ...
-            '.EO.edf');
+        ReadFile = append(filePaths.env.ReadDir, CurrPID, '.EO.edf');
 
         if passCounter == 1
 
@@ -127,9 +124,7 @@ for row = 1:NoRows
             end
 
             % Add channel location data to the dataset and save the dataset
-            EEG = pop_chanedit(EEG, {'lookup',['C:\Users\Grae\OneDrive - Westmead ' ...
-                'Institute for Medical Research\Documents\EEGLAB_MyFiles\Neuroscan ' ...
-                'Chan Locs\THIS-ONE-NuAmps40-forACTION-Centred.ced']});
+            EEG = pop_chanedit(EEG, {'lookup', filePaths.env.ChanLocs});
             [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 
             % Save the imported data as an EEGLAB data set (.set)
@@ -292,29 +287,34 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            EEG = pop_runica(EEG, ...
-                'icatype', 'runica', ...
-                'extended', 1, ...
-                'lrate', 1e-05, ...
-                'maxsteps', 2000, ...
-                'interrupt','off');
+            %% Copy referenced file to filePaths.env.AMICADir and cd
+            copyfile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
+            cd filePaths.env.AMICADir;
+
+            %% Run AMICA
+            EEG = pop_runamica(EEG, ...
+                max_threads, 6);
 
             EEG = pop_iclabel(EEG, 'default');
 
             % Save as new dataset
             SetName = append(CurrPID, '.ICALabelled.set');
-            SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
+            SaveNew = append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set');
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                 'setname', SetName, ...
                 'savenew', SaveNew, ...
                 'gui','off');
             eeglab redraw;
 
+            %% Copy ICALabelled file to WritezDir and cd
+            copyfile(append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set'), WriteDir);
+            cd WriteDir;
+
             fprintf(append(newline, newline, "Press any key to continue to view ICs.", newline, newline));
             pause();
 
             %%%%%  IC REJECTION  %%%%%%
-            addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab2026.1.0\plugins\ICLabel\viewprops\');
+            addpath(filePaths.env.ICLabDir);
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
@@ -434,9 +434,7 @@ for row = 1:NoRows
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             fileName = append(CurrPID, '.ASR.set');
-            filePath = append('C:\\Users\\Grae\\OneDrive - Westmead Institute ', ...
-            'for Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\', ...
-            CurrPID, '\\Attempt1\\');
+            filePath = append(filePaths.env.MainDir, CurrPID, '\\Attempt1\\');
             EEG = pop_loadset('filename',fileName,'filepath',filePath);
             [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
             eeglab redraw;
@@ -480,12 +478,13 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            EEG = pop_runica(EEG, ...
-                'icatype', 'runica', ...
-                'extended', 1, ...
-                'lrate', 1e-05, ...
-                'maxsteps', 2000, ...
-                'interrupt','off');
+            %% Copy referenced file to filePaths.env.AMICADir and cd
+            copyfile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
+            cd filePaths.env.AMICADir;
+
+            % Run AMICA
+            EEG = pop_runamica(EEG, ...
+                max_threads, 6);
 
             EEG = pop_iclabel(EEG, 'default');
 
@@ -498,6 +497,10 @@ for row = 1:NoRows
                 'gui','off');
             eeglab redraw;
 
+            %% Copy ICALabelled file to WritezDir and cd
+            copyfile(append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set'), WriteDir);
+            cd WriteDir;
+
             fprintf(append(newline, newline, "Press any key to interpolate independent components.", newline, newline));
             pause();
 
@@ -505,7 +508,7 @@ for row = 1:NoRows
 
             % add path of icainterp() to ensure MATLAB doesn't throw an
             % error, since this function is not in our main eeglab folder
-            addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\EEGLAB_MyFiles\GitHubRepo');
+            addpath(filePaths.env.ICAInterpDir);
             EEG = eeg_icainterp(EEG, BadChan, chanlocs);
 
             % Save as new dataset
@@ -521,7 +524,7 @@ for row = 1:NoRows
             pause();
 
             %%%%%  IC REJECTION  %%%%%%
-            addpath('C:\Users\Grae\OneDrive - Westmead Institute for Medical Research\Documents\eeglab2026.1.0\plugins\ICLabel\viewprops\');
+            addpath(filePaths.env.ICLabDir);
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
