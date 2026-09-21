@@ -16,8 +16,9 @@
 
 function export = epoch_export(EEG,CurrPID)
 
-writeDir = ['C:\\Users\\Grae\\OneDrive - Westmead Institute for Medical ' ...
-    'Research\\Documents\\EEGLAB_MyFiles\\ACTION\\Preprocessing\\ExportedEEGs\\'];
+filePaths = dotenv();
+
+writeDir = filePaths.env.EzpDir;
 
 % Exports one good epoch per data file
 for i = 1:size(EEG.reject.rejmanual, 2)
@@ -31,9 +32,7 @@ for i = 1:size(EEG.reject.rejmanual, 2)
     end
 end 
 
-writeDir = append('C:\\Users\\Grae\\OneDrive - Westmead Institute for ', ...
-            'Medical Research\\Documents\\EEGLAB_MyFiles\\ACTION\\', ...
-            'Preprocessing\\ExportedEEGs\\', CurrPID, '\\');
+writeDir = append(writeDir, CurrPID, '\\');
 
 % Exports the runs of good epochs as discrete chunks
 
