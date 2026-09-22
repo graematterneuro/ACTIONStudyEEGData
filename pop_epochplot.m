@@ -192,6 +192,6 @@ if EEG.nbchan > 100
 end
 
 eegplot( EEG.data, 'srate', EEG.srate, 'title', ['Scroll channel activities -- eegplot() -- ', EEG.setname], ...
-    'limits', [EEG.xmin EEG.xmax]*1000, 'spacing', 50, 'winlength', 15, 'command', command, eegplotoptions{:}, varargin{:});
+    'limits', [EEG.xmin EEG.xmax]*1000, 'spacing', 50, 'command', command, eegplotoptions{:}, varargin{:}, 'winlength', 15);
 com = [ com sprintf('pop_eegplot( EEG, %d, %d, %d);', superpose, reject) ]; 
 return;
