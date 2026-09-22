@@ -18,7 +18,7 @@ function export = epoch_export(EEG,CurrPID)
 
 filePaths = dotenv();
 
-writeDir = filePaths.env.EzpDir;
+writeDir = char(filePaths.env.ExpDir);
 
 % Exports one good epoch per data file
 for i = 1:size(EEG.reject.rejmanual, 2)
