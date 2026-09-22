@@ -1,4 +1,4 @@
-% function export = epoch_export(EEG,currPID,writeDir,)
+% function export = epoch_export(EEG,currPID,writeDir)
 %
 % Exports good epochs over multiple files.
 %
