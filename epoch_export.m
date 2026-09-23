@@ -6,6 +6,7 @@
 %
 %     EEG         -     a dataset with rejected epochs
 %     currPID     -     Current participant ID
+%     exportDur   -     Directory to export the EEG files to
 %
 % Outputs:
 %
@@ -14,11 +15,9 @@
 % Copyright (C) 2026 Grace Harvie, Westmead Institute for Medical Research
 % and The University of Sydney, grace.harvie@sydney.edu.au
 
-function export = epoch_export(EEG,CurrPID)
+function export = epoch_export(EEG,CurrPID,exportDir)
 
-filePaths = dotenv();
-
-writeDir = char(filePaths.env.ExpDir);
+writeDir = exportDir;
 
 % Exports one good epoch per data file
 for i = 1:size(EEG.reject.rejmanual, 2)
