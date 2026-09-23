@@ -1,14 +1,14 @@
-% POP_EPOCHREJPLOT - Visually inspect epochs using a scrolling display.
+% POP_NEWEEGPLOT - Visually inspect epochs using a scrolling display.
 %                 Perform rejection or marking for rejection of visually 
 %                 (and/or previously) selected data portions (i.e., stretches 
 %                 of continuous data or whole data epochs).
 %
 % Usage:
-%   >> pop_epochrejplot( EEG ) % Scroll epoched EEG channel data. Allow marking for rejection via
+%   >> pop_neweegplot( EEG ) % Scroll epoched EEG channel data. Allow marking for rejection via
 %                         % button 'Update Marks' but perform no actual data rejection.
 %                         % Do not show or use marks from previous visual inspections
 %                         % or from semi-auotmatic rejection.
-%   >> pop_epochrejplot( EEG, superpose, reject );
+%   >> pop_neweegplot( EEG, icacomp, superpose, reject );
 %
 % Graphic interface:
 %   "Add to previously marked rejections" - [edit box] Either YES or NO. 
@@ -17,6 +17,8 @@
 %                    equivalent 'reject'.
 % Inputs:
 %   EEG        - input EEG dataset
+%   icacomp    - type of rejection 0 = independent components; 
+%                                  1 = data channels. {Default: 1 = data channels}
 %   superpose  - 0 = Show new marks only: Do not color the background of data portions 
 %                    previously marked for rejection by visual inspection. Mark new data 
 %                    portions for rejection by first coloring them (by dragging the left 
@@ -29,7 +31,7 @@
 %                    using a lighter and darker hue, respectively). Pressing the 
 %                    'Update Marks' or 'Reject' buttons (see 'reject' below)
 %                    will then mark or reject all the colored data portions.
-%                {Default: 0, show and act on new marks only}
+%                    {Default: 0, show and act on new marks only}
 %   reject     - 0 = Mark for rejection. Mark data portions by dragging the left mouse 
 %                    button on the data windows (producing a background coloring indicating 
 %                    the extent of the marked data portion).  Then press the screen button 
@@ -47,7 +49,7 @@
 %
 % Outputs:
 %   Modifications are applied to the current EEG dataset at the end of the
-%   EEGPLOT call, when the user presses the 'Update Marks' or 'Reject' button.
+%   NEWEEGPLOT call, when the user presses the 'Update Marks' or 'Reject' button.
 %   NOTE: The modifications made are not saved into EEGLAB history. As of v4.2,
 %   events contained in rejected data portions are remembered in the EEG.urevent
 %   structure (see EEGLAB tutorial).
@@ -92,21 +94,29 @@
 % 03-27-02 added event latency recalculation for continuous data -ad
 % 22-SEPT-2026 removal of ica plotting, adding custom spacing (amplitude 
 % scaling) and winlength (number of epochs to display) - GH
+% 24-SEPT-2026 added back ica plotting - GH
  
 
-function com = pop_epochplot(EEG, superpose, reject, topcommand, varargin)
+function com = pop_neweegplot(EEG, icacomp, superpose, reject, topcommand, varargin)
 
 com = '';
-icacomp = 1;
 if nargin < 1
 	help pop_eegplot;
 	return;
 end;	
 if nargin < 2
-	superpose = 0;
+	icacomp = 1;
 end;	
 if nargin < 3
+	superpose = 0;
+end
+if nargin < 4
 	reject = 1;
+end
+if icacomp == 0
+	if isempty( EEG.icasphere )
+		disp('Error: you must run ICA first'); return;
+	end
 end
 
 if nargin < 3 && EEG.trials > 1 && ~isempty(EEG.event)
@@ -132,6 +142,13 @@ if EEG.trials > 1 && ~isempty(EEG.reject)
     if icacomp == 1 
         macrorej  = 'EEG.reject.rejmanual';
         macrorejE = 'EEG.reject.rejmanualE';
+    else			
+        macrorej  = 'EEG.reject.icarejmanual';
+        macrorejE = 'EEG.reject.icarejmanualE';
+    end
+    if icacomp == 1
+         elecrange = [1:EEG.nbchan];
+    else elecrange = [1:size(EEG.icaweights,1)];
     end
     elecrange = [1:EEG.nbchan];
     colrej = EEG.reject.rejmanualcol;
@@ -171,7 +188,7 @@ else % case of a single trial (continuous data)
                '  end;' ...
                'end;' ...
                'clear EEGTMP tmpcom;' ];
-        if nargin < 3
+        if nargin < 4
             res = questdlg2( strvcat('Mark stretches of continuous data for rejection', ...
                                      'by dragging the left mouse button. Click on marked', ...
                                      'stretches to unmark. When done,press "REJECT" to', ...
@@ -193,5 +210,5 @@ end
 
 eegplot( EEG.data, 'srate', EEG.srate, 'title', ['Scroll channel activities -- eegplot() -- ', EEG.setname], ...
     'limits', [EEG.xmin EEG.xmax]*1000, 'spacing', 50, 'command', command, eegplotoptions{:}, varargin{:}, 'winlength', 15);
-com = [ com sprintf('pop_eegplot( EEG, %d, %d, %d);', superpose, reject) ]; 
+com = [ com sprintf('pop_eegplot( EEG, %d, %d, %d);', icacomp, superpose, reject) ]; 
 return;
