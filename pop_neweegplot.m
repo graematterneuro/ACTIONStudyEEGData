@@ -207,8 +207,13 @@ if EEG.nbchan > 100
     disp('pop_eegplot() note: Baseline subtraction disabled to speed up display');
     eegplotoptions = { eegplotoptions{:} 'submean' 'off' };
 end
-
-eegplot( EEG.data, 'srate', EEG.srate, 'title', ['Scroll channel activities -- eegplot() -- ', EEG.setname], ...
-    'limits', [EEG.xmin EEG.xmax]*1000, 'spacing', 50, 'command', command, eegplotoptions{:}, varargin{:}, 'winlength', 15);
+if icacomp == 1
+    eegplot( EEG.data, 'srate', EEG.srate, 'title', ['Scroll channel activities -- eegplot() -- ', EEG.setname], ...
+        'limits', [EEG.xmin EEG.xmax]*1000 , 'spacing', 50, 'command', command, eegplotoptions{:}, varargin{:}), 'winlength', 15;
+else
+    tmpdata = eeg_getdatact(EEG, 'component', [1:size(EEG.icaweights,1)]);
+    eegplot(tmpdata, 'srate', EEG.srate, 'title', ['Scroll channel activities -- eegplot() -- ', EEG.setname], ...
+        'limits', [EEG.xmin EEG.xmax]*1000, 'spacing', 25, 'command', command, eegplotoptions{:}, varargin{:}, 'winlength', 15);
+end
 com = [ com sprintf('pop_eegplot( EEG, %d, %d, %d);', icacomp, superpose, reject) ]; 
 return;
