@@ -23,12 +23,16 @@
 
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab;
 
-% Create a variable for FilePaths.env
-filePaths = dotenv();
+if ~exist('filePaths')
+    % Create a variable for FilePaths.env
+    filePaths = dotenv();
 
-% Create a table of Participant IDs from a prepared .csv, using file path 
-% in .env
-PIDs = readtable(filePaths.env.PIDtable);
+    % Create a table of Participant IDs from a prepared .csv, using file path
+    % in .env
+    PIDs = readtable(filePaths.env.PIDtable);
+end
+
+cd(filePaths.env.RepoDir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%                            VARIABLES                            %%%%%
@@ -66,10 +70,10 @@ for row = 1:NoRows
 
         % Write directory file path
         mkdir(append(filePaths.env.MainDir, CurrPID, '\\Attempt', attempt, '\\'));
-        WriteDir = append(filePaths.env.MainDir, CurrPID, '\\Attempt', attempt, '\\');
+        WriteDir = char(append(filePaths.env.MainDir, CurrPID, '\\Attempt', attempt, '\\'));
 
         % Read directory file path
-        ReadFile = append(filePaths.env.ReadDir, CurrPID, '.EO.edf');
+        ReadFile = char(append(filePaths.env.ReadDir, CurrPID, '.EO.edf'));
 
         if passCounter == 1
 
@@ -287,38 +291,67 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            %% Copy referenced file to filePaths.env.AMICADir and cd
-            copyfile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
-            cd filePaths.env.AMICADir;
+            %% Move referenced file to filePaths.env.AMICADir and cd 
+            movefile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
+            AMICADir = char(filePaths.env.AMICADir);
+            cd(AMICADir);
+
+            fileName = append(CurrPID, '.Ref.set');
+            EEG = pop_loadset('filename',fileName,'filepath', AMICADir);
+            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
+            eeglab redraw;
 
             %% Run AMICA
-            EEG = pop_runamica(EEG, ...
-                max_threads, 6);
-
-            EEG = pop_iclabel(EEG, 'default');
+            EEG = pop_runamica(EEG, 'max_threads', 6);
 
             % Save as new dataset
-            SetName = append(CurrPID, '.ICALabelled.set');
-            SaveNew = append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set');
+            SetName = append(CurrPID, '.AMICA.set');
+            SaveNew = char(append(AMICADir, CurrPID, '.AMICA.set'));
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                 'setname', SetName, ...
                 'savenew', SaveNew, ...
                 'gui','off');
             eeglab redraw;
 
-            %% Copy ICALabelled file to WritezDir and cd
-            copyfile(append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set'), WriteDir);
-            cd WriteDir;
+            addpath(filePaths.env.ICLabDir);
+            EEG = pop_iclabel(EEG, 'default');
+
+            % Save as new dataset
+            SetName = append(CurrPID, '.ICALabelled.set');
+            SaveNew = append(AMICADir, CurrPID, '.ICALabelled.set');
+            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                'setname', SetName, ...
+                'savenew', SaveNew, ...
+                'gui','off');
+            eeglab redraw;
+
+            %% Move files to WriteDir and cd
+            movefile(append(AMICADir, CurrPID, '.Ref.set'), WriteDir, "f");
+            movefile(append(AMICADir, CurrPID, '.AMICA.set'), WriteDir, "f");
+            movefile(append(AMICADir, '/amicaout'), WriteDir, "f");
+            movefile(append(AMICADir, CurrPID, '.ICALabelled.set'), WriteDir, "f");
+            cd(filePaths.env.RepoDir);
+
+            fileName = append(CurrPID, '.ICALabelled.set');
+            EEG = pop_loadset('filename',fileName,'filepath',WriteDir);
+            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
+            eeglab redraw;
+
+            pop_eegplot( EEG, 0, 1, 1);
+            userInput = input(append(newline, newline, "Check for artifacts which pollute multiple ICs."));
+            % Maybe add a step here (above) to check for large artifacts
+            % not handled by ica?
 
             fprintf(append(newline, newline, "Press any key to continue to view ICs.", newline, newline));
             pause();
 
             %%%%%  IC REJECTION  %%%%%%
             addpath(filePaths.env.ICLabDir);
+            EEG = pop_icflag(EEG, [NaN NaN;0.9 1;0.9 1;NaN NaN;0.9 1;NaN NaN;0.9 1]);
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
-            fprintf(append(newline, newline, "Select ICs for rejection then press any key to continue.", newline, newline));
+            fprintf(append(newline, newline, "Check and label ICs for rejection then press any key to continue.", newline, newline));
             pause();
 
             % Plot single trials before and after IC rejection.
@@ -339,6 +372,9 @@ for row = 1:NoRows
 
             fprintf(append(newline, newline, "Press any key to remove the rejected components.", newline, newline));
             pause();
+
+            EEG = pop_saveset( EEG, 'savemode','resave');
+            [ALLEEG, EEG, CURRENTSET] = eeg_store(ALLEEG, EEG, CURRENTSET);
 
             EEG = pop_subcomp( EEG, [], 0);
 
@@ -366,7 +402,7 @@ for row = 1:NoRows
             repeatWReject = input(append("Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
-            repeatWReject = input(append("Note these channels down in your lab book.", newline, "Just to confirm - there are bad channels which require rejecting?", ...
+            repeatWReject = input(append(newline, newline, "Just to confirm - Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
             if ~any(repeatWReject)
@@ -386,14 +422,15 @@ for row = 1:NoRows
                     'savenew', SaveNew);
                 eeglab redraw;
 
-                pop_eegplot(EEG, 1, 1, 1);
+                pop_neweegplot(EEG, 1, 1, 1);
 
                 fprintf(append(newline, newline, "Mark epochs with artifacts and then press any key to export cleaned data to text.", newline, newline));
                 pause();
 
 
                 %%%%% EXPORT AS TEXT FILE %%%%%
-                epoch_export(EEG, CurrPID);
+                exportDir = char(filePaths.env.ExpDir);
+                epoch_export(EEG, CurrPID, exportDir, 1);
 
                 fprintf(append(newline, newline, "Press any key to clear all and load next participant.", newline, newline));
                 pause();
@@ -408,7 +445,7 @@ for row = 1:NoRows
                 repeatWReject = 0;
 
             elseif repeatWReject == 1
-                fprintf(append(newline, newline, "Press any key to clear all and try again.", newline, newline));
+                fprintf(append(newline, newline, "Note these channels down in your lab book.", newline, newline, "Press any key to clear all and try again.", newline, newline));
                 pause();
 
                 STUDY = [];
@@ -429,12 +466,12 @@ for row = 1:NoRows
 
         else % if passCounter > 1
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%%%%  IMPORT ATTEMPT1 SAVED AT ASR STEP INTO EEGLAB  %%%%%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%  IMPORT Attempt1\CurrPID.ASR.set INTO EEGLAB  %%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             fileName = append(CurrPID, '.ASR.set');
-            filePath = append(filePaths.env.MainDir, CurrPID, '\\Attempt1\\');
+            filePath = char(append(filePaths.env.MainDir, CurrPID, '\\Attempt1\\'));
             EEG = pop_loadset('filename',fileName,'filepath',filePath);
             [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 );
             eeglab redraw;
@@ -478,28 +515,52 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            %% Copy referenced file to filePaths.env.AMICADir and cd
-            copyfile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
-            cd filePaths.env.AMICADir;
+            %% Move referenced file to filePaths.env.AMICADir and cd 
+            movefile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
+            AMICADir = char(filePaths.env.AMICADir);
+            cd(AMICADir);
 
-            % Run AMICA
-            EEG = pop_runamica(EEG, ...
-                max_threads, 6);
 
-            EEG = pop_iclabel(EEG, 'default');
+            fileName = append(CurrPID, '.Ref.set');
+            EEG = pop_loadset('filename',fileName,'filepath', AMICADir);
+            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
+            eeglab redraw;
+
+            %% Run AMICA
+            EEG = pop_runamica(EEG, 'max_threads', 6);
 
             % Save as new dataset
-            SetName = append(CurrPID, '.ICALabelled.set');
-            SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
+            SetName = append(CurrPID, '.AMICA.set');
+            SaveNew = char(append(AMICADir, CurrPID, '.AMICA.set'));
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                 'setname', SetName, ...
                 'savenew', SaveNew, ...
                 'gui','off');
             eeglab redraw;
 
-            %% Copy ICALabelled file to WritezDir and cd
-            copyfile(append(filePaths.env.AMICADir, CurrPID, '.ICALabelled.set'), WriteDir);
-            cd WriteDir;
+            addpath(filePaths.env.ICLabDir);
+            EEG = pop_iclabel(EEG, 'default');
+
+            % Save as new dataset
+            SetName = append(CurrPID, '.ICALabelled.set');
+            SaveNew = append(AMICADir, CurrPID, '.ICALabelled.set');
+            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                'setname', SetName, ...
+                'savenew', SaveNew, ...
+                'gui','off');
+            eeglab redraw;
+
+            %% Move files to WriteDir and cd
+            movefile(append(AMICADir, CurrPID, '.Ref.set'), WriteDir, "f");
+            movefile(append(AMICADir, CurrPID, '.AMICA.set'), WriteDir, "f");
+            movefile(append(AMICADir, '/amicaout'), WriteDir, "f");
+            movefile(append(AMICADir, CurrPID, '.ICALabelled.set'), WriteDir, "f");
+            cd(filePaths.env.RepoDir);
+
+            fileName = append(CurrPID, '.ICALabelled.set');
+            EEG = pop_loadset('filename',fileName,'filepath',WriteDir);
+            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
+            eeglab redraw;
 
             fprintf(append(newline, newline, "Press any key to interpolate independent components.", newline, newline));
             pause();
@@ -525,6 +586,7 @@ for row = 1:NoRows
 
             %%%%%  IC REJECTION  %%%%%%
             addpath(filePaths.env.ICLabDir);
+            EEG = pop_icflag(EEG, [NaN NaN;0.9 1;0.9 1;NaN NaN;0.9 1;NaN NaN;0.9 1]);
             pop_viewprops(EEG, 0);
             pop_selectcomps(EEG, [1:size(EEG.icawinv,2)]);
 
@@ -576,7 +638,7 @@ for row = 1:NoRows
             repeatWReject = input(append(newline, newline, "Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
-            repeatWReject = input(append(newline, newline, "Note these channels down in your lab book.", newline, newline, "Just to confirm - there are bad channels which require rejecting?", ...
+            repeatWReject = input(append(newline, newline, "Just to confirm - Are there channels which are not adequately cleaned by ICA?", ...
                 newline, "[Y = 1/N = anything else]", newline));
 
             if ~any(repeatWReject)
@@ -596,14 +658,15 @@ for row = 1:NoRows
                     'savenew', SaveNew);
                 eeglab redraw;
 
-                pop_eegplot(EEG, 1, 1, 1);
+                pop_neweegplot(EEG, 1, 1, 1);
 
-                fprintf(append(newline, newline, "Mark epochs with artifacts and then press any key to export cleaned data to text.", newline, newline));
+                fprintf(append(newline, newline, "Mark epochs with artifacts, update marks in the GUI, and then press any key to export cleaned data to text.", newline, newline));
                 pause();
 
 
                 %%%%% EXPORT AS TEXT FILE %%%%%
-                epoch_export(EEG, CurrPID);
+                exportDir = char(filePaths.env.ExpDir);
+                epoch_export(EEG, CurrPID, exportDir, 1);
 
                 fprintf(append(newline, newline, "Press any key to clear all and load next participant.", newline, newline));
                 pause();
@@ -618,7 +681,7 @@ for row = 1:NoRows
                 repeatWReject = 0;
 
             elseif repeatWReject == 1
-                fprintf(append(newline, newline, "Press any key to clear all and try again.", newline, newline));
+                fprintf(append(newline, newline, "Note these channels down in your lab book.", newline, newline, "Press any key to clear all and try again.", newline, newline));
                 pause();
 
                 STUDY = [];
