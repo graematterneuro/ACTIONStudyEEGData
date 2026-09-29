@@ -424,7 +424,7 @@ for row = 1:NoRows
 
                 pop_neweegplot(EEG, 1, 1, 1);
 
-                fprintf(append(newline, newline, "Mark epochs with artifacts and then press any key to export cleaned data to text.", newline, newline));
+                fprintf(append(newline, newline, "Mark epochs with artifacts, click 'reject' to save the marked epochs, but do not reject them. Then press any key to export thee good epochs.", newline, newline));
                 pause();
 
 
@@ -660,7 +660,8 @@ for row = 1:NoRows
 
                 pop_neweegplot(EEG, 1, 1, 1);
 
-                fprintf(append(newline, newline, "Mark epochs with artifacts, update marks in the GUI, and then press any key to export cleaned data to text.", newline, newline));
+                fprintf(append(newline, newline, 
+                fprintf(append(newline, newline, "Mark epochs with artifacts, click 'reject' to save the marked epochs, but do not reject them. Then press any key to export thee good epochs.", newline, newline));
                 pause();
 
 
