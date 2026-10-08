@@ -291,50 +291,22 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            %% Move referenced file to filePaths.env.AMICADir and cd 
-            movefile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
-            AMICADir = char(filePaths.env.AMICADir);
-            cd(AMICADir);
+            EEG = pop_runica(EEG, ...
+                'icatype', 'runica', ...
+                'extended', 1, ...
+                'lrate', 1e-05, ...
+                'maxsteps', 2000, ...
+                'interrupt','off');
 
-            fileName = append(CurrPID, '.Ref.set');
-            EEG = pop_loadset('filename',fileName,'filepath', AMICADir);
-            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
-            eeglab redraw;
-
-            %% Run AMICA
-            EEG = pop_runamica(EEG, 'max_threads', 6);
-
-            % Save as new dataset
-            SetName = append(CurrPID, '.AMICA.set');
-            SaveNew = char(append(AMICADir, CurrPID, '.AMICA.set'));
-            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-                'setname', SetName, ...
-                'savenew', SaveNew, ...
-                'gui','off');
-            eeglab redraw;
-
-            addpath(filePaths.env.ICLabDir);
             EEG = pop_iclabel(EEG, 'default');
-
+            
             % Save as new dataset
             SetName = append(CurrPID, '.ICALabelled.set');
-            SaveNew = append(AMICADir, CurrPID, '.ICALabelled.set');
+            SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                 'setname', SetName, ...
                 'savenew', SaveNew, ...
                 'gui','off');
-            eeglab redraw;
-
-            %% Move files to WriteDir and cd
-            movefile(append(AMICADir, CurrPID, '.Ref.set'), WriteDir, "f");
-            movefile(append(AMICADir, CurrPID, '.AMICA.set'), WriteDir, "f");
-            movefile(append(AMICADir, '/amicaout'), WriteDir, "f");
-            movefile(append(AMICADir, CurrPID, '.ICALabelled.set'), WriteDir, "f");
-            cd(filePaths.env.RepoDir);
-
-            fileName = append(CurrPID, '.ICALabelled.set');
-            EEG = pop_loadset('filename',fileName,'filepath',WriteDir);
-            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
             eeglab redraw;
 
             pop_eegplot( EEG, 0, 1, 1);
@@ -515,51 +487,22 @@ for row = 1:NoRows
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
-            %% Move referenced file to filePaths.env.AMICADir and cd 
-            movefile(append(WriteDir, CurrPID, '.Ref.set'), filePaths.env.AMICADir);
-            AMICADir = char(filePaths.env.AMICADir);
-            cd(AMICADir);
+            EEG = pop_runica(EEG, ...
+                'icatype', 'runica', ...
+                'extended', 1, ...
+                'lrate', 1e-05, ...
+                'maxsteps', 2000, ...
+                'interrupt','off');
 
-
-            fileName = append(CurrPID, '.Ref.set');
-            EEG = pop_loadset('filename',fileName,'filepath', AMICADir);
-            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
-            eeglab redraw;
-
-            %% Run AMICA
-            EEG = pop_runamica(EEG, 'max_threads', 6);
-
-            % Save as new dataset
-            SetName = append(CurrPID, '.AMICA.set');
-            SaveNew = char(append(AMICADir, CurrPID, '.AMICA.set'));
-            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-                'setname', SetName, ...
-                'savenew', SaveNew, ...
-                'gui','off');
-            eeglab redraw;
-
-            addpath(filePaths.env.ICLabDir);
             EEG = pop_iclabel(EEG, 'default');
-
+            
             % Save as new dataset
             SetName = append(CurrPID, '.ICALabelled.set');
-            SaveNew = append(AMICADir, CurrPID, '.ICALabelled.set');
+            SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
             [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                 'setname', SetName, ...
                 'savenew', SaveNew, ...
                 'gui','off');
-            eeglab redraw;
-
-            %% Move files to WriteDir and cd
-            movefile(append(AMICADir, CurrPID, '.Ref.set'), WriteDir, "f");
-            movefile(append(AMICADir, CurrPID, '.AMICA.set'), WriteDir, "f");
-            movefile(append(AMICADir, '/amicaout'), WriteDir, "f");
-            movefile(append(AMICADir, CurrPID, '.ICALabelled.set'), WriteDir, "f");
-            cd(filePaths.env.RepoDir);
-
-            fileName = append(CurrPID, '.ICALabelled.set');
-            EEG = pop_loadset('filename',fileName,'filepath',WriteDir);
-            [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0 ); 
             eeglab redraw;
 
             fprintf(append(newline, newline, "Press any key to interpolate independent components.", newline, newline));
