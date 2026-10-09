@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ACTION_Preprocessing_Pipeline_ICA.m
+% ACTIONPreprocessingPipeline.m
 %
 % This script is designed to run in EEGLAB and provide semi-automated
 % preprocessing of EEG data from the ACTION study and partially fulfills
