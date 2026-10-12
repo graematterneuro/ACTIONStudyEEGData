@@ -41,10 +41,12 @@ cd(filePaths.env.RepoDir);
 % Get the number of rows in PID table so that the for loop will iterate
 NoRows = height(PIDs);
 
+startRow = input("Enter row number of the PID you wish to start preprocessing:");
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%                BEGIN PREPROCESSING FOR LOOP                     %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for row = 1:NoRows
+for row = startRow:NoRows
 
     % Counters for the while loop and various if-else statements which
     % allow us to iterate through the processing multiple times if there
@@ -255,6 +257,87 @@ for row = 1:NoRows
                 eeglab redraw;
             end
 
+            % Check Cleanline results
+            figure; pop_spectopo(EEG, 1, ...
+                [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
+                'EEG' , ...
+                'percent', 100, ...         % Percent data to sample (1 to 100)
+                'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
+                'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
+                );
+
+            lineNoiseChk  = input(append("Is there still line noise which requires additional cleaning?", ...
+                newline, "[Y = 1/N = anything else]", newline));
+
+            if lineNoiseChk == 1
+
+                % Plot channel spectra close up to determine line noise frequencies
+                multiFreq = input(append("Is there more than one frequency to clean?", ...
+                    newline, "[Y = 1/N = anything else]", newline));
+
+                if multiFreq == 1
+
+                    lnFreq1 = input("Frequency 1: ");
+                    lnFreq2 = input ("Frequency 2: ");
+
+                    % Clean line noise from cephalic channel and save as new dataset
+                    EEG = pop_cleanline(EEG, ...
+                        'bandwidth',2, ...      % Bandwidth
+                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
+                        'linefreqs', [lnFreq1 lnFreq2], ...     % Line noise freqs to remove
+                        'newversion',1, ...     % Use new implementation (T/F)
+                        'normSpectrum',0, ...   % Normalise log spectrum by detrending (T/F)
+                        'p',0.01, ...           % P-val for detection of sinusoid
+                        'pad',2, ...            % FFT padding factor
+                        'plotfigures',0, ...    % Plot individual figures (T/F)
+                        'scanforlines',0, ...   % Scan for line noise (T/F)
+                        'sigtype', ...
+                        'Channels', ...         % Type of signal to clean (channels/components)
+                        'taperbandwidth',2, ... % Taper bandwidth
+                        'tau',100, ...          % Window overlap smoothing factor
+                        'verb',0, ...           % Produce verbose output
+                        'winsize',4, ...        % Sliding window length (s)
+                        'winstep',1 ...         % Sliding window step size (s)
+                        );
+
+                else
+
+                    lnFreq = input("Frequency: ");
+
+                    % Clean line noise from cephalic channel and save as new dataset
+                    EEG = pop_cleanline(EEG, ...
+                        'bandwidth',2, ...      % Bandwidth
+                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
+                        'linefreqs', lnFreq, ...     % Line noise freqs to remove
+                        'newversion',1, ...     % Use new implementation (T/F)
+                        'normSpectrum',0, ...   % Normalise log spectrum by detrending (T/F)
+                        'p',0.01, ...           % P-val for detection of sinusoid
+                        'pad',2, ...            % FFT padding factor
+                        'plotfigures',0, ...    % Plot individual figures (T/F)
+                        'scanforlines',0, ...   % Scan for line noise (T/F)
+                        'sigtype', ...
+                        'Channels', ...         % Type of signal to clean (channels/components)
+                        'taperbandwidth',2, ... % Taper bandwidth
+                        'tau',100, ...          % Window overlap smoothing factor
+                        'verb',0, ...           % Produce verbose output
+                        'winsize',4, ...        % Sliding window length (s)
+                        'winstep',1 ...         % Sliding window step size (s)
+                        );
+                end
+
+                % Save as new dataset
+                SetName = append(CurrPID, '.LineNoise.set');
+                SaveNew = append(WriteDir, CurrPID, '.LineNoise.set');
+                [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                    'setname', SetName, ...
+                    'savenew', SaveNew, ...
+                    'gui','off');
+                eeglab redraw;
+            end
+
             fprintf(append(newline, "Press any key to continue to ASR.", newline, newline));
             pause();
 
@@ -299,7 +382,7 @@ for row = 1:NoRows
                 'interrupt','off');
 
             EEG = pop_iclabel(EEG, 'default');
-            
+
             % Save as new dataset
             SetName = append(CurrPID, '.ICALabelled.set');
             SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
@@ -441,9 +524,9 @@ for row = 1:NoRows
                 attempt = num2str(passCounter);
             end
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%%%%  MULTIPLE PASSED ARE REQUIRED  %%%%%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%  MULTIPLE PASSED ARE REQUIRED  %%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         else % if passCounter > 1
 
@@ -504,7 +587,7 @@ for row = 1:NoRows
                 'interrupt','off');
 
             EEG = pop_iclabel(EEG, 'default');
-            
+
             % Save as new dataset
             SetName = append(CurrPID, '.ICALabelled.set');
             SaveNew = append(WriteDir, CurrPID, '.ICALabelled.set');
