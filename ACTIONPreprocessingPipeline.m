@@ -394,13 +394,22 @@ for row = 1:NoRows
                     'savenew', SaveNew);
                 eeglab redraw;
 
-                pop_neweegplot(EEG, 1, 1, 1);
+                %%%%%  MARK EPOCHS FOR REJECTION  %%%%%
+                EEG = pop_eegthresh(EEG,1,[1:26],-60,60,0,1.998,2,0);
+                EEG = pop_rejtrend(EEG,1,[1:26],1000,17,0.05,1,0,0);
+                EEG = pop_jointprob(EEG,1,[1:26],4,4,0,0,0,[],0);
+                EEG = pop_rejkurt(EEG,1,[1:26],5,5,0,0,0,[],0);
 
-                fprintf(append(newline, newline, "Mark epochs with artifacts, click 'reject' to save the marked epochs, but do not reject them. Then press any key to export thee good epochs.", newline, newline));
+                fprintf(append(newline, newline, "Select 'Scroll data' to view the automatically rejected epochs.", newline, newline))
+
+                pop_rejmenu(EEG,1);
+
+                fprintf(append(newline, newline, "Manually select and deselect the epochs for rejection, then select 'Update marks', and 'Close (keep marks)'.", ...
+                    newline, newline, "Press any key to save non-rejected epochs.", newline, newline));
                 pause();
 
 
-                %%%%% EXPORT AS TEXT FILE %%%%%
+                %%%%% EXPORT AS SET FILE %%%%%
                 exportDir = char(filePaths.env.ExpDir);
                 epoch_export(EEG, CurrPID, exportDir, 1);
 
@@ -601,9 +610,18 @@ for row = 1:NoRows
                     'savenew', SaveNew);
                 eeglab redraw;
 
-                pop_neweegplot(EEG, 1, 1, 1);
+                %%%%%  MARK EPOCHS FOR REJECTION  %%%%%
+                EEG = pop_eegthresh(EEG,1,[1:26],-60,60,0,1.998,2,0);
+                EEG = pop_rejtrend(EEG,1,[1:26],1000,17,0.05,1,0,0);
+                EEG = pop_jointprob(EEG,1,[1:26],4,4,0,0,0,[],0);
+                EEG = pop_rejkurt(EEG,1,[1:26],5,5,0,0,0,[],0);
 
-                fprintf(append(newline, newline, "Mark epochs with artifacts, click 'reject' to save the marked epochs, but do not reject them. Then press any key to export thee good epochs.", newline, newline));
+                fprintf(append(newline, newline, "Select 'Scroll data' to view the automatically rejected epochs.", newline, newline))
+
+                pop_rejmenu(EEG,1);
+
+                fprintf(append(newline, newline, "Manually select and deselect the epochs for rejection, then select 'Update marks', and 'Close (keep marks)'.", ...
+                    newline, newline, "Press any key to save non-rejected epochs.", newline, newline));
                 pause();
 
 
