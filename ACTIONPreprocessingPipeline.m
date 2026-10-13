@@ -374,8 +374,8 @@ for row = startRow:NoRows
                     [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
                     'EEG' , ...
                     'percent', 100, ...         % Percent data to sample (1 to 100)
-                    'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
-                    'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                    'freq', [10 22 50], ...   % Frequencies to plot as scalp maps (Hz)
+                    'freqrange',[2 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
                     'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
                     );
             end
@@ -614,7 +614,7 @@ for row = startRow:NoRows
                     % Clean line noise from cephalic channel and save as new dataset
                     EEG = pop_cleanline(EEG, ...
                         'bandwidth',2, ...      % Bandwidth
-                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'chanlist', [1:EEG.nbchan], ... % Indices to clean (channel/components)
                         'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
                         'linefreqs', [lnFreq1 lnFreq2], ...     % Line noise freqs to remove
                         'newversion',1, ...     % Use new implementation (T/F)
@@ -639,7 +639,7 @@ for row = startRow:NoRows
                     % Clean line noise from cephalic channel and save as new dataset
                     EEG = pop_cleanline(EEG, ...
                         'bandwidth',2, ...      % Bandwidth
-                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'chanlist', [1:EEG.nbchan], ... % Indices to clean (channel/components)
                         'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
                         'linefreqs', lnFreq, ...     % Line noise freqs to remove
                         'newversion',1, ...     % Use new implementation (T/F)
@@ -671,8 +671,8 @@ for row = startRow:NoRows
                     [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
                     'EEG' , ...
                     'percent', 100, ...         % Percent data to sample (1 to 100)
-                    'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
-                    'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                    'freq', [10 22 50], ...   % Frequencies to plot as scalp maps (Hz)
+                    'freqrange',[2 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
                     'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
                     );
 
