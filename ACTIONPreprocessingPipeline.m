@@ -10,7 +10,8 @@
 % Author: Grace Harvie, WIMR/USyd, 2026
 % Other contributions noted in comments where appropriate.
 %
-% Copyright (C) 2026 Grace Harvie, Westmead Institute for Medical Research
+% Copyright (C) 2026 Grace Harvie, Westmead Institu
+% te for Medical Research
 % and The University of Sydney, grace.harvie@sydney.edu.au
 %
 % License: PolyForm Noncommercial License 1.0.0
@@ -257,7 +258,39 @@ for row = startRow:NoRows
                 eeglab redraw;
             end
 
-            % Check Cleanline results
+            fprintf(append(newline, "Press any key to continue to ASR.", newline, newline));
+            pause();
+
+            %%%%%  CLEAN BAD DATA SEGMENTS USING ASR  %%%%%
+            cleanEEG = clean_asr(EEG, 10);
+            vis_artifacts(cleanEEG, EEG);
+            EEG = cleanEEG;
+
+            % Save as new dataset
+            SetName = append(CurrPID, '.ASR.set');
+            SaveNew = append(WriteDir, CurrPID, '.ASR.set');
+            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                'setname', SetName, ...
+                'savenew', SaveNew, ...
+                'gui','off');
+            eeglab redraw;
+
+            fprintf(append(newline, newline, "Press any key to continue to full rank average referencing.", newline, newline));
+            pause();
+
+            %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
+            EEG = fullRankAveRef(EEG);
+
+            % Save as new dataset
+            SetName = append(CurrPID, '.Ref.set');
+            SaveNew = append(WriteDir, CurrPID, '.Ref.set');
+            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                'setname', SetName, ...
+                'savenew', SaveNew, ...
+                'gui','off');
+            eeglab redraw;
+
+            %%%%%  CHECK FOR LINE NOISE  %%%%%
             figure; pop_spectopo(EEG, 1, ...
                 [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
                 'EEG' , ...
@@ -329,48 +362,26 @@ for row = startRow:NoRows
                 end
 
                 % Save as new dataset
-                SetName = append(CurrPID, '.LineNoise.set');
-                SaveNew = append(WriteDir, CurrPID, '.LineNoise.set');
+                SetName = append(CurrPID, '.LineNoise2.set');
+                SaveNew = append(WriteDir, CurrPID, '.LineNoise2.set');
                 [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
                     'setname', SetName, ...
                     'savenew', SaveNew, ...
                     'gui','off');
                 eeglab redraw;
+
+                figure; pop_spectopo(EEG, 1, ...
+                    [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
+                    'EEG' , ...
+                    'percent', 100, ...         % Percent data to sample (1 to 100)
+                    'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
+                    'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                    'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
+                    );
             end
 
-            fprintf(append(newline, "Press any key to continue to ASR.", newline, newline));
-            pause();
-
-            %%%%%  CLEAN BAD DATA SEGMENTS USING ASR  %%%%%
-            cleanEEG = clean_asr(EEG, 10);
-            vis_artifacts(cleanEEG, EEG);
-            EEG = cleanEEG;
-
-            % Save as new dataset
-            SetName = append(CurrPID, '.ASR.set');
-            SaveNew = append(WriteDir, CurrPID, '.ASR.set');
-            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-                'setname', SetName, ...
-                'savenew', SaveNew, ...
-                'gui','off');
-            eeglab redraw;
-
-            fprintf(append(newline, newline, "Press any key to continue to full rank average referencing.", newline, newline));
-            pause();
-
-            %%%%%  FULL-RANK AVERAGE REFERENCE  %%%%%
-            EEG = fullRankAveRef(EEG);
-
-            % Save as new dataset
-            SetName = append(CurrPID, '.Ref.set');
-            SaveNew = append(WriteDir, CurrPID, '.Ref.set');
-            [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
-                'setname', SetName, ...
-                'savenew', SaveNew, ...
-                'gui','off');
-            eeglab redraw;
-
-            fprintf(append(newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
+            fprintf(append(newline, newline, "Make a note of the noisy channels in your lab book.", ...
+                newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
             pause();
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
@@ -575,8 +586,102 @@ for row = startRow:NoRows
                 'gui','off');
             eeglab redraw;
 
-            fprintf(append(newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
+
+            %%%%%  CHECK FOR LINE NOISE  %%%%%
+            figure; pop_spectopo(EEG, 1, ...
+                [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
+                'EEG' , ...
+                'percent', 100, ...         % Percent data to sample (1 to 100)
+                'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
+                'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
+                );
+
+            lineNoiseChk  = input(append("Is there still line noise which requires additional cleaning?", ...
+                newline, "[Y = 1/N = anything else]", newline));
+
+            if lineNoiseChk == 1
+
+                % Plot channel spectra close up to determine line noise frequencies
+                multiFreq = input(append("Is there more than one frequency to clean?", ...
+                    newline, "[Y = 1/N = anything else]", newline));
+
+                if multiFreq == 1
+
+                    lnFreq1 = input("Frequency 1: ");
+                    lnFreq2 = input ("Frequency 2: ");
+
+                    % Clean line noise from cephalic channel and save as new dataset
+                    EEG = pop_cleanline(EEG, ...
+                        'bandwidth',2, ...      % Bandwidth
+                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
+                        'linefreqs', [lnFreq1 lnFreq2], ...     % Line noise freqs to remove
+                        'newversion',1, ...     % Use new implementation (T/F)
+                        'normSpectrum',0, ...   % Normalise log spectrum by detrending (T/F)
+                        'p',0.01, ...           % P-val for detection of sinusoid
+                        'pad',2, ...            % FFT padding factor
+                        'plotfigures',0, ...    % Plot individual figures (T/F)
+                        'scanforlines',0, ...   % Scan for line noise (T/F)
+                        'sigtype', ...
+                        'Channels', ...         % Type of signal to clean (channels/components)
+                        'taperbandwidth',2, ... % Taper bandwidth
+                        'tau',100, ...          % Window overlap smoothing factor
+                        'verb',0, ...           % Produce verbose output
+                        'winsize',4, ...        % Sliding window length (s)
+                        'winstep',1 ...         % Sliding window step size (s)
+                        );
+
+                else
+
+                    lnFreq = input("Frequency: ");
+
+                    % Clean line noise from cephalic channel and save as new dataset
+                    EEG = pop_cleanline(EEG, ...
+                        'bandwidth',2, ...      % Bandwidth
+                        'chanlist', [1:26], ... % Indices to clean (channel/components)
+                        'computepower',1, ...   % Visualise original and cleaned spectra (?) (T/F)
+                        'linefreqs', lnFreq, ...     % Line noise freqs to remove
+                        'newversion',1, ...     % Use new implementation (T/F)
+                        'normSpectrum',0, ...   % Normalise log spectrum by detrending (T/F)
+                        'p',0.01, ...           % P-val for detection of sinusoid
+                        'pad',2, ...            % FFT padding factor
+                        'plotfigures',0, ...    % Plot individual figures (T/F)
+                        'scanforlines',0, ...   % Scan for line noise (T/F)
+                        'sigtype', ...
+                        'Channels', ...         % Type of signal to clean (channels/components)
+                        'taperbandwidth',2, ... % Taper bandwidth
+                        'tau',100, ...          % Window overlap smoothing factor
+                        'verb',0, ...           % Produce verbose output
+                        'winsize',4, ...        % Sliding window length (s)
+                        'winstep',1 ...         % Sliding window step size (s)
+                        );
+                end
+
+                % Save as new dataset
+                SetName = append(CurrPID, '.LineNoise2.set');
+                SaveNew = append(WriteDir, CurrPID, '.LineNoise2.set');
+                [ALLEEG, EEG, CURRENTSET] = pop_newset(ALLEEG, EEG, CURRENTSET+1, ...
+                    'setname', SetName, ...
+                    'savenew', SaveNew, ...
+                    'gui','off');
+                eeglab redraw;
+
+                figure; pop_spectopo(EEG, 1, ...
+                    [0  119998], ...            % Epoch time range to analyze [min_ms max_ms]
+                    'EEG' , ...
+                    'percent', 100, ...         % Percent data to sample (1 to 100)
+                    'freq', [50 60 65], ...   % Frequencies to plot as scalp maps (Hz)
+                    'freqrange',[45 70], ...     % Plotting frequency range [lo_Hz hi_Hz]z]
+                    'electrodes','off' ...      % Spectral and scalp map options (see topoplot)
+                    );
+
+            end
+
+            fprintf(append(newline, newline, "Make a note of the noisy channels in your lab book.", ...
+                newline, newline, "Press any key to continue to ICA decomposition and IC labelling.", newline, newline));
             pause();
+
 
             %%%%  ICA DECOMPOSITION AND LABELLING  %%%%%
             EEG = pop_runica(EEG, ...
